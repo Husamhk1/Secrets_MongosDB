@@ -4,7 +4,9 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
+const saltRounds = 10;
 
 const app = express();
 
@@ -40,25 +42,29 @@ app.get("/login", function(req,res){
 
 app.post("/login", (req,res)=>{
    const username = req.body.username;
-   const password = md5(req.body.password);
+   const password = req.body.password;
+
    
     User.findOne({email:username}).then((user, err)=>{
       if(err){
         console.log(err);
       }else{
+        bcrypt.compare(password, user.password, function(err1, result) {
+            // result == true
+            if(result == true){
+                console.log("Logged!");
+                res.render("secrets");
 
-          if(user.password === password){
-           
-            console.log("Logged!");
-            res.render("secrets");
-        }
-      
+            } else {
+                console.log(err1);
+            }           
+            
+        });
       }
-      
-      
+         
     }).catch((err)=>{
         console.log(err);
-        console.log("The Password is wrong");
+        console.log("The Acount does't exist!");
     }) 
 
 })
@@ -69,17 +75,24 @@ app.get("/register", async (req,res) =>{
 
 
 app.post("/register",  (req, res)=>{
-const newUser = new User({
-    email: (req.body.username),
-    password: md5(req.body.password)
+
+
+bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+    // Store hash in your password DB.
+    const newUser = new User({
+        email: (req.body.username),
+        password: hash
+    });
+
+    newUser.save().then(()=>{
+        console.log("Saved!");
+        res.render("secrets");
+    }).catch((err)=>{
+        console.log(err);
+        console.log("Error");
+    }) 
 });
-newUser.save().then(()=>{
-    console.log("Saved!");
-    res.render("secrets");
-}).catch((err)=>{
-    console.log(err);
-    console.log("Error");
-}) 
+
 
 });
 
