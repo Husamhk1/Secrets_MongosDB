@@ -70,7 +70,7 @@ app.get("/register", async (req,res) =>{
 
 app.post("/register",  (req, res)=>{
 const newUser = new User({
-    email: md5(req.body.username),
+    email: (req.body.username),
     password: md5(req.body.password)
 });
 newUser.save().then(()=>{
