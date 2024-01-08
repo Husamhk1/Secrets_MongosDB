@@ -15,11 +15,14 @@ app.set('view engine' , 'ejs');
 app.use(bodyParser.urlencoded({extended:true}));
 
 app.use(session({
-    secret: 'keyboard catOur little secret.',
+    secret: "Our little secret.",
     resave: false,
     saveUninitialized: true,
     //cookie: { secure: true }
   }))
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 mongoose.connect("mongodb://localhost:27017/UserDB").then(()=>{
     console.log("connection successfully!")
@@ -33,8 +36,13 @@ const userSchema = new mongoose.Schema({
     password: String
 });
 
+userSchema.plugin(passportLocalMongoose);
+
 const User = new mongoose.model("User", userSchema);
 
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser);
+passport.deserializeUser(User.deserializeUser);
 
 
 app.get("/", function(req,res){
@@ -60,7 +68,7 @@ app.post("/register",  (req, res)=>{
 
 
 
-
+ 
 });
 
 app.listen(3000 , function(){
